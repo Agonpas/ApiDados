@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Game;
-use App\Http\Requests\StoreGameRequest;
-use App\Http\Requests\UpdateGameRequest;
-use App\Http\Resources\GameCollection;
+use App\Models\User;
+use Illuminate\Http\Request;
+use App\Http\Resources\UserCollection;
 
-class GameController extends Controller
+class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $games = Game::all();
-        return new GameCollection($games);
+        $users = User::all();
+        return new UserCollection($users);
+        
     }
 
     /**
@@ -29,7 +29,7 @@ class GameController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreGameRequest $request)
+    public function store(Request $request)
     {
         //
     }
@@ -37,7 +37,7 @@ class GameController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Game $game)
+    public function show(User $user)
     {
         //
     }
@@ -45,7 +45,7 @@ class GameController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Game $game)
+    public function edit(User $user)
     {
         //
     }
@@ -53,7 +53,7 @@ class GameController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateGameRequest $request, Game $game)
+    public function update(Request $request, User $user)
     {
         //
     }
@@ -61,7 +61,7 @@ class GameController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Game $game)
+    public function destroy(User $user)
     {
         //
     }
