@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Resources\UserCollection;
@@ -46,7 +47,11 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        //
+        $includeGames = request()->query('includeGames');
+        if ($includeGames) {
+            return new UserResource($user->loadMissing('games'));
+        }
+        return new UserResource($user);
     }
 
     /**
