@@ -5,16 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Resources\UserCollection;
+use App\Filters\UserFilter;
 
 class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $users = User::all();
-        return new UserCollection($users);
+    public function index(Request $request)
+    {   
+        $filter = new UserFilter();
+        $queryItems = $filter->transform($request);
+        $includeGames = $request->query('includeGames');
+        $users = User::where($queryItems);
+        if($includeGames) {
+            $users = $users->with('games');
+        }
+        return new UserCollection($users->paginate()->appends($request->query()));
         
     }
 

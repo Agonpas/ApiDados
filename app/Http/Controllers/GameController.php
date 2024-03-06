@@ -6,16 +6,25 @@ use App\Models\Game;
 use App\Http\Requests\StoreGameRequest;
 use App\Http\Requests\UpdateGameRequest;
 use App\Http\Resources\GameCollection;
+use Illuminate\Http\Request;
+use App\Filters\GameFilter;
 
 class GameController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $games = Game::all();
-        return new GameCollection($games);
+        $filter = new GameFilter();
+        $queryItems = $filter->transform($request);
+        if(count($queryItems) == 0) {
+            return new GameCollection(Game::paginate());
+        } else {
+            $games = Game::where($queryItems)->paginate();
+            return new GameCollection($games->appends($request->query()));
+        }
+        
     }
 
     /**
