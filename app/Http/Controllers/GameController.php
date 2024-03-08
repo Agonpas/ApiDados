@@ -29,10 +29,9 @@ class GameController extends Controller
     }
     public function getGames($userId)
     {
-        // Obtén el usuario
+        
         $user = User::findOrFail($userId);
-
-        // Obtén todos los juegos asociados al usuario
+        
         $games = $user->games;
 
         return response()->json($games, 200);
@@ -118,8 +117,13 @@ class GameController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Game $game)
+    public function destroyAllGames($userId)
     {
-        //
+        $user = User::find($userId);
+        if  (!$user) {
+            return  response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+        $user->games()->delete();
+        return response()->json(['message' => 'Todos los juegos del usuario han sido eliminados.']);
     }
 }

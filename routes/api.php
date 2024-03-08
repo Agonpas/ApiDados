@@ -21,10 +21,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers'], function(){
     //Route::apiResource('users', UserController::class);
-    Route::apiResource('games', GameController::class);
+    //Route::apiResource('games', GameController::class);
     Route::get('/users/{id}/games', [GameController::class, 'getGames']); //mostrar juegos
     Route::post('/users/{id}/games', [GameController::class, 'createGame']); //crear juegos
     Route::get('/users', [UserController::class, 'index']); //mostrar usuarios
-    Route::get('users/{id}/win-percentage', [GameController::class, 'winPercentage']); //porcentaje victorias
+    Route::get('/users/{id}/win-percentage', [GameController::class, 'winPercentage']); //porcentaje victorias
+    Route::delete('/users/{id}/games', [GameController::class, 'destroyAllGames']); //eliminamos todos los juegos
 });
 
