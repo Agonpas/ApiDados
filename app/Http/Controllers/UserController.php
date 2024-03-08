@@ -2,19 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Resources\UserCollection;
+use App\Filters\UserFilter;
+use App\Http\Requests\UpdateUserRequest;
 
 class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $users = User::all();
-        return new UserCollection($users);
+    public function index(Request $request)
+    {   
+        $filter = new UserFilter();
+        $queryItems = $filter->transform($request);
+        $includeGames = $request->query('includeGames');
+        $users = User::where($queryItems);
+        if($includeGames) {
+            $users = $users->with('games');
+        }
+        return new UserCollection($users->paginate()->appends($request->query()));
         
     }
 
@@ -31,7 +40,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        return new UserResource(User::create($request->all()));
     }
 
     /**
@@ -39,7 +48,11 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        //
+        $includeGames = request()->query('includeGames');
+        if ($includeGames) {
+            return new UserResource($user->loadMissing('games'));
+        }
+        return new UserResource($user);
     }
 
     /**
@@ -53,9 +66,9 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        //
+        $user->update($request->all());
     }
 
     /**

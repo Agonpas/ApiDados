@@ -6,26 +6,125 @@ use App\Models\Game;
 use App\Http\Requests\StoreGameRequest;
 use App\Http\Requests\UpdateGameRequest;
 use App\Http\Resources\GameCollection;
+use Illuminate\Http\Request;
+use App\Filters\GameFilter;
+use App\Models\User;
 
 class GameController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $games = Game::all();
-        return new GameCollection($games);
+        $filter = new GameFilter();
+        $queryItems = $filter->transform($request);
+        if(count($queryItems) == 0) {
+            return new GameCollection(Game::paginate());
+        } else {
+            $games = Game::where($queryItems)->paginate();
+            return new GameCollection($games->appends($request->query()));
+        }
+        
+    }
+    public function getGames($userId)
+    {
+        
+        $user = User::findOrFail($userId);
+        
+        $games = $user->games;
+
+        return response()->json($games, 200);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function createGame(Request $request, $userId)
     {
-        //
+        
+        $user = User::find($userId);
+       if (!$user) {
+            return response()->json(['error' => 'Usuario no encontrado.'], 404);
+        }
+        $dice1 = rand(1, 6);
+        $dice2 = rand(1, 6);
+        $sum = $dice1 + $dice2;
+        $won = $sum === 7 ? true : false;
+        
+        $game = Game::create([
+            'user_id' => $user->id,
+            'dice1' => $dice1,
+            'dice2' => $dice2,
+            'won' => $won
+        ]);
+        return response()->json(['message' => 'Juego creado exitosamente', 'game' => $game], 201);
+    }
+    public function winPercentage($userId) 
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            return  response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+        $totalGames = $user->games()->count();
+        $totalWins = $user->games()->where('won', true)->count();
+        if ($totalGames === 0) {
+            $winPercentage = 0;
+        } else {
+            $winPercentage = ($totalWins / $totalGames) * 100;
+        }
+        return response()->json([
+            'user_id' => $user->id,
+            'win_percentage' => $winPercentage,
+            'total_games' => $totalGames,
+            'total_wins' => $totalWins
+
+        ]);
+    }
+    private function calculateWinPercentage($userId)
+{
+    $totalGames = Game::where('user_id', $userId)->count();
+
+    if ($totalGames === 0) {
+        return 0;
     }
 
+    $wonGames = Game::where('user_id', $userId)->where('won', true)->count();
+
+    return ($wonGames / $totalGames) * 100;
+}
+    public function allUsersWinPercentage()
+    {
+        $users = User::all();
+        $usersWithPercentage = [];
+        foreach ($users as $user) {
+            $winPercentage = $this->calculateWinPercentage($user->id);
+            $usersWithPercentage[] = [
+                'user' => $user,
+                'win_percentage' => $winPercentage
+            ];
+        }
+        return response()->json(['users' => $usersWithPercentage]);
+    }
+    private function calculateTotalWinPercentage()
+    {
+        $totalGames = Game::count();
+
+        if ($totalGames === 0) {
+            return 0;
+        }
+
+        $wonGames = Game::where('won', true)->count();
+
+        return ($wonGames / $totalGames) * 100;
+    }
+    public function getTotalWinPercentage()
+    {
+        // Llamamos a la función calculateWinPercentage sin argumentos para obtener el total
+        $percentage = $this->calculateTotalWinPercentage();
+
+        return response()->json(['win_percentage' => $percentage]);
+    }
     /**
      * Store a newly created resource in storage.
      */
@@ -61,8 +160,13 @@ class GameController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Game $game)
+    public function destroyAllGames($userId)
     {
-        //
+        $user = User::find($userId);
+        if  (!$user) {
+            return  response()->json(['error' => 'Usuario no encontrado'], 404);
+        }
+        $user->games()->delete();
+        return response()->json(['message' => 'Todos los juegos del usuario han sido eliminados.']);
     }
 }
