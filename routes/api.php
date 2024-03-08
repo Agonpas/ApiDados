@@ -25,5 +25,6 @@ Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers'], function
     Route::get('/users/{id}/games', [GameController::class, 'getGames']); //mostrar juegos
     Route::post('/users/{id}/games', [GameController::class, 'createGame']); //crear juegos
     Route::get('/users', [UserController::class, 'index']); //mostrar usuarios
+    Route::get('users/{id}/win-percentage', [GameController::class, 'winPercentage']); //porcentaje victorias
 });
 
