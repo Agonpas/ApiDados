@@ -20,7 +20,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers'], function(){
-    Route::apiResource('users', UserController::class);
+    //Route::apiResource('users', UserController::class);
     Route::apiResource('games', GameController::class);
+    Route::get('/users/{id}/games', [GameController::class, 'getGames']); //mostrar juegos
+    Route::post('/users/{id}/games', [GameController::class, 'createGame']); //crear juegos
+    Route::get('/users', [UserController::class, 'index']); //mostrar usuarios
 });
 
