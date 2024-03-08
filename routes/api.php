@@ -27,5 +27,7 @@ Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers'], function
     Route::get('/users', [UserController::class, 'index']); //mostrar usuarios
     Route::get('/users/{id}/win-percentage', [GameController::class, 'winPercentage']); //porcentaje victorias
     Route::delete('/users/{id}/games', [GameController::class, 'destroyAllGames']); //eliminamos todos los juegos
+    Route::get('/users/winPercentage', [GameController::class, 'allUsersWinPercentage']); //todos los user con sus porcentajes
+    Route::get('/users/totalWinPercentage', [GameController::class, 'getTotalWinPercentage']); //todos los user con sus porcentajes
 });
 
