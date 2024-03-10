@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\GameController;
+use App\Http\Controllers\PassportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,15 +20,21 @@ use App\Http\Controllers\GameController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+Route::post('/players', [PassportController::class,'register']);
+//players
+Route::get('/users/{id}/games', [GameController::class, 'getGames']); //mostrar juegos
+Route::delete('/users/{id}/games', [GameController::class, 'destroyAllGames']); //eliminamos todos los juegos
+Route::post('/users/{id}/games', [GameController::class, 'createGame']); //crear juegos
+Route::get('/users/{id}/winPercentage', [GameController::class, 'winPercentage']); //porcentaje victorias
+//Admmin
+Route::get('/users', [UserController::class, 'index']); //mostrar usuarios
+Route::get('/users/winPercentage', [GameController::class, 'allUsersWinPercentage']); //todos los user con sus porcentajes
+Route::get('/users/totalWinPercentage', [GameController::class, 'getTotalWinPercentage']); //todos los user con sus porcentajes
+
 Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers'], function(){
     //Route::apiResource('users', UserController::class);
     //Route::apiResource('games', GameController::class);
-    Route::get('/users/{id}/games', [GameController::class, 'getGames']); //mostrar juegos
-    Route::post('/users/{id}/games', [GameController::class, 'createGame']); //crear juegos
-    Route::get('/users', [UserController::class, 'index']); //mostrar usuarios
-    Route::get('/users/{id}/win-percentage', [GameController::class, 'winPercentage']); //porcentaje victorias
-    Route::delete('/users/{id}/games', [GameController::class, 'destroyAllGames']); //eliminamos todos los juegos
-    Route::get('/users/winPercentage', [GameController::class, 'allUsersWinPercentage']); //todos los user con sus porcentajes
-    Route::get('/users/totalWinPercentage', [GameController::class, 'getTotalWinPercentage']); //todos los user con sus porcentajes
+   
+    
 });
 
