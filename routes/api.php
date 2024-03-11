@@ -17,10 +17,13 @@ use App\Http\Controllers\PassportController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-Route::post('/players', [PassportController::class,'register']);
+
+Route::post('/register', [PassportController::class,'register']);
+Route::post('/login', [PassportController::class,'login'])->name('login');
+
+/*Route::middleware(middleware:'auth:api')->group(function () {
+   
+});*/
 //players
 Route::get('/users/{id}/games', [GameController::class, 'getGames']); //mostrar juegos
 Route::delete('/users/{id}/games', [GameController::class, 'destroyAllGames']); //eliminamos todos los juegos
@@ -32,8 +35,8 @@ Route::get('/users/winPercentage', [GameController::class, 'allUsersWinPercentag
 Route::get('/users/totalWinPercentage', [GameController::class, 'getTotalWinPercentage']); //todos los user con sus porcentajes
 
 Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers'], function(){
-    //Route::apiResource('users', UserController::class);
-    //Route::apiResource('games', GameController::class);
+    Route::apiResource('users', UserController::class);
+    Route::apiResource('games', GameController::class);
    
     
 });
