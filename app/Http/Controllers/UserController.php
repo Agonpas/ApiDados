@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Http\Resources\UserCollection;
 use App\Filters\UserFilter;
@@ -30,9 +31,15 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request, $nickname)
     {
-        //
+        $user = User::create([
+            'name' => $request->name,
+            'nickname' => $nickname,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+        return $user;
     }
 
     /**
