@@ -38,6 +38,8 @@ Route::get('/players/{id}/games', [GameController::class, 'getGames']); //mostra
 Route::put('/users/{id}', [UserController::class, 'updateName']); //modificar usuario
 Route::put('/players/{id}', [UserController::class, 'updateName']); //modificar usuario
 
+Route::get('/players/ranking', [GameController::class, 'ranking']); //Porcentaje total de victorias
+
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/users', [UserController::class, 'index']);
@@ -54,6 +56,7 @@ Route::get('/users/{id}/winPercentage', [GameController::class, 'winPercentage']
  //mostrar usuarios
 
 Route::get('/users/totalWinPercentage', [GameController::class, 'getTotalWinPercentage']); //Porcentaje total de victorias
+Route::get('/players/ranking', [GameController::class, 'ranking']); //Porcentaje total de victorias
 
 Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers'], function(){
     Route::apiResource('users', UserController::class);

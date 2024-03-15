@@ -106,6 +106,22 @@ class GameController extends Controller
         }
         return response()->json(['users' => $usersWithPercentage]);
     }
+    public function ranking()
+    {
+        $users = User::all();
+        $usersWithPercentage = [];
+        foreach ($users as $user) {
+            $winPercentage = $this->calculateWinPercentage($user->id);
+            $usersWithPercentage[] = [
+                'user' => $user,
+                'win_percentage' => $winPercentage
+            ];
+        }
+        $usersWithPercentageCollection = collect($usersWithPercentage);
+        $usersWithPercentageSorted = $usersWithPercentageCollection->sortByDesc('win_percentage')->values()->all();
+    
+        return response()->json(['users' => $usersWithPercentageSorted]);
+    }
     private function calculateTotalWinPercentage()
     {
         $totalGames = Game::count();
