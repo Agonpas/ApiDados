@@ -18,6 +18,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+    
     protected $fillable = [
         'name',
         'nickname',
@@ -44,12 +45,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+    protected $guard_name = 'api';
     public function games()
     {
         return $this->hasMany(Game::class);
     }
-    public function hasRole($role)
-    {
-    return $this->role === $role;
-    }
+   
 }

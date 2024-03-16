@@ -46,15 +46,20 @@ class PassportController extends Controller
         }
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
+
         $user = User::create($input);
-        $success['token'] = $user->createToken('API Token')->accessToken;
-        $success['name'] = $user->name;
         $user->assignRole('player');
+
+        $success['token'] = $user->createToken('API Token')->accessToken;
+        $success['id'] = $user->id;
+        $success['name'] = $user->name;
+        $success['role'] = 'player';
+        
     
        
         return response()->json([$success, 'Usuario registrado con éxito.'], 201);
     }
-
+   
     public function logout()
     {
         $user = Auth::user();
