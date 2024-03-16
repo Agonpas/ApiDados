@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use App\Http\Resources\UserCollection;
 use App\Filters\UserFilter;
 use App\Http\Requests\UpdateUserRequest;
+use GuzzleHttp\Psr7\Response;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -76,6 +78,22 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user)
     {
         $user->update($request->all());
+    }
+    public function updateName(Request $request, $id)
+    {
+        $user = Auth::user();
+        if ($user->id != $id) {
+            return response()->json(['error' => 'No estás autorizado para esta acción'], 403);
+        }
+
+        $this->validate($request, [
+            'name' => 'required',
+            'nickname' => 'required'
+        ]);
+        $user->name = $request->input('name');
+        $user->nickname = $request->input('nickname');
+        $user->save();
+        return response()->json(['message' => 'El nombre se ha actualizado.', 'user' => $user], 200);
     }
 
     /**

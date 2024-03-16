@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
+use League\OAuth2\Server\Exception\OAuthServerException;
 
 //use Laravel\Passport\Passport;
 
@@ -15,22 +17,15 @@ class PassportController extends Controller
 {
     public function login(Request $request) 
     {
-        try {
-            $user = User::where('email', $request->email)->first();
-    
-            if (!$user || !Hash::check($request->password, $user->password)) {
-                return response()->json(['error' => 'Error de inicio de sesión. Error en mail o contraseña.'], 401);
-            }
-    
-            $token = $user->createToken('example')->accessToken;
-    
-            return response()->json([
-                'message' => 'Has iniciado sesión',
-                'user' => $user,
-                'token' => $token
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+        
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
+            $user = Auth::user();
+            $success['token'] = $user->createToken('API Token')->accessToken;
+            $success['name'] = $user->name;
+            return response()->json([$success, 'Usuario logeado con éxito.'], 200);
+        } else {
+            return response()->json(['error' => 'Error de inicio de sesión. Error en mail o contraseña.'], 401);
+
         }
         
 
@@ -51,15 +46,32 @@ class PassportController extends Controller
         }
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
+
         $user = User::create($input);
-        $success['token'] = $user->createToken('API Token')->accessToken;
-        $success['name'] = $user->name;
         $user->assignRole('player');
+
+        $success['token'] = $user->createToken('API Token')->accessToken;
+        $success['id'] = $user->id;
+        $success['name'] = $user->name;
+        $success['role'] = 'player';
+        
     
        
         return response()->json([$success, 'Usuario registrado con éxito.'], 201);
     }
+   
+    public function logout()
+    {
+        $user = Auth::user();
 
+        if ($user) {
 
+            $user->tokens->each->revoke();
+
+            return response()->json('Gracias por usar nuestro servicio', 200);
+        } else {
+            return response()->json('No tienes sesión iniciada', 401);
+        }
+    }
     
 }
