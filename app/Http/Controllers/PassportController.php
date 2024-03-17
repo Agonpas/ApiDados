@@ -21,7 +21,10 @@ class PassportController extends Controller
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])){
             $user = Auth::user();
             $success['token'] = $user->createToken('API Token')->accessToken;
+            $success['id'] = $user->id;
             $success['name'] = $user->name;
+            $success['email'] = $user->email;
+            
             return response()->json([$success, 'Usuario logeado con éxito.'], 200);
         } else {
             return response()->json(['error' => 'Error de inicio de sesión. Error en mail o contraseña.'], 401);
