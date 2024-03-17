@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Game;
 
 class ApiDadosTest extends TestCase
 {
@@ -31,7 +32,7 @@ class ApiDadosTest extends TestCase
         //respuesta esperada si la creación es correcta
         $response->assertStatus(201);
     }
-    public function test_login_with_correct_credentials()
+    public function test_login_with_correct_credentials(): void
     {   //probamos que el usuario creado se pueda logear (prueba doble: logeo y que el crear se hizo correcto)
         $response = $this->post('api/login', [
             'email' => 'test@test.com',
@@ -99,7 +100,63 @@ public function test_create_game(): void
 
     //respuesta esperada si la creación del juego es correcta
     $response->assertStatus(201);
-    //eliminamos al usuario al finalizar el test
-    $user->delete(); 
 }
+public function test_get_games_for_player(): void
+{
+    //creamos jugador
+    $player = User::factory()->create();
+    //asignamos el rol de jugador al usuario creado
+    $player->assignRole('player'); 
+
+    //simulación de autenticación
+    $this->actingAs($player, 'api');
+
+    //creamos juegos al jugador creado
+    Game::factory()->count(3)->create(['user_id' => $player->id]);
+
+    //comprobamos la ruta get para mostrar los juegos
+    $response = $this->getJson("api/players/{$player->id}/games");
+
+    //respuesta esperada si la visualización de juegos es correcta
+    $response->assertStatus(200);
+
+    //comprobar los campos que devuelve el json son los esperados
+    $response->assertJsonStructure([
+        '*' => [ 
+            'id',
+            'user_id',
+            'dice1',
+            'dice2',
+            'won',
+            'created_at',
+            'updated_at'
+        ]
+    ]);
+
+    //comprobamos que se han creado los 3 juegos
+    $response->assertJsonCount(3); 
+}
+public function test_player_cannot_view_other_players_games(): void
+{
+    //generamos 2 jugadores
+    $player1 = User::factory()->create();
+    $player2 = User::factory()->create();
+
+    //asignamos rol jugador
+    $player1->assignRole('player');
+    $player2->assignRole('player');
+
+    //autenticamos el jugador1
+    $this->actingAs($player1, 'api');
+
+    //creamos juegos al jugador2
+    Game::factory()->count(3)->create(['user_id' => $player2->id]);
+
+    //intento de visualizar los juegos del jugador2
+    $response = $this->getJson("api/players/{$player2->id}/games");
+
+    //verificamos que el resultado sea de prohibido
+    $response->assertStatus(403);
+}
+
 }
