@@ -101,21 +101,40 @@ public function test_create_game(): void
     //respuesta esperada si la creación del juego es correcta
     $response->assertStatus(201);
 }
+public function test_player_cannot_create_other_players_games(): void
+{
+    // Creamos dos jugadores diferentes
+    $user1 = User::factory()->create();
+    $user2 = User::factory()->create();
+
+    // Asignamos el rol de jugador a ambos usuarios
+    $user1->assignRole('player');
+    $user2->assignRole('player');
+
+    // Autenticamos al primer jugador
+    $this->actingAs($user1, 'api');
+
+    // Hacemos la solicitud POST a la ruta de creación de juego para el jugador 2
+    $response = $this->postJson("api/players/{$user2->id}/games");
+
+    // Verificamos que la solicitud haya sido denegada (esperamos un 403 Forbidden)
+    $response->assertStatus(403);
+}
 public function test_get_games_for_player(): void
 {
     //creamos jugador
-    $player = User::factory()->create();
+    $user = User::factory()->create();
     //asignamos el rol de jugador al usuario creado
-    $player->assignRole('player'); 
+    $user->assignRole('player'); 
 
     //simulación de autenticación
-    $this->actingAs($player, 'api');
+    $this->actingAs($user, 'api');
 
     //creamos juegos al jugador creado
-    Game::factory()->count(3)->create(['user_id' => $player->id]);
+    Game::factory()->count(3)->create(['user_id' => $user->id]);
 
     //comprobamos la ruta get para mostrar los juegos
-    $response = $this->getJson("api/players/{$player->id}/games");
+    $response = $this->getJson("api/players/{$user->id}/games");
 
     //respuesta esperada si la visualización de juegos es correcta
     $response->assertStatus(200);
@@ -139,24 +158,68 @@ public function test_get_games_for_player(): void
 public function test_player_cannot_view_other_players_games(): void
 {
     //generamos 2 jugadores
-    $player1 = User::factory()->create();
-    $player2 = User::factory()->create();
+    $user1 = User::factory()->create();
+    $user2 = User::factory()->create();
 
     //asignamos rol jugador
-    $player1->assignRole('player');
-    $player2->assignRole('player');
+    $user1->assignRole('player');
+    $user2->assignRole('player');
 
     //autenticamos el jugador1
-    $this->actingAs($player1, 'api');
+    $this->actingAs($user1, 'api');
 
     //creamos juegos al jugador2
-    Game::factory()->count(3)->create(['user_id' => $player2->id]);
+    Game::factory()->count(3)->create(['user_id' => $user2->id]);
 
     //intento de visualizar los juegos del jugador2
-    $response = $this->getJson("api/players/{$player2->id}/games");
+    $response = $this->getJson("api/players/{$user2->id}/games");
 
     //verificamos que el resultado sea de prohibido
     $response->assertStatus(403);
 }
+public function test_player_can_delete_games(): void
+{
+    //creamos jugador
+    $user = User::factory()->create();
 
+    //asignamos el rol de jugador al usuario creado
+    $user->assignRole('player'); 
+
+    //simulación de autenticación
+    $this->actingAs($user, 'api');
+
+    //creamos juegos al jugador creado
+    Game::factory()->count(3)->create(['user_id' => $user->id]);
+    
+    // Intentamos borrar todos los juegos del jugador
+    $response = $this->deleteJson("api/players/{$user->id}/games");
+    
+    // Verificamos que la solicitud haya sido exitosa (esperamos un 200 OK)
+    $response->assertStatus(200);
+    
+    // Verificamos que los juegos del jugador hayan sido eliminados
+    $this->assertEquals(0, Game::where('user_id', $user->id)->count());
+}
+public function test_player_cannot_delete_other_players_games(): void
+{
+    //generamos 2 jugadores
+    $user1 = User::factory()->create();
+    $user2 = User::factory()->create();
+
+    //asignamos rol jugadores
+    $user1->assignRole('player');
+    $user2->assignRole('player');
+
+    //autenticamos el jugador1
+    $this->actingAs($user1, 'api');
+
+    //creamos juegos al jugador2
+    Game::factory()->count(3)->create(['user_id' => $user2->id]);
+
+    //intento de borrar los juegos del jugador2
+    $response = $this->deleteJson("api/players/{$user2->id}/games");
+
+    //verificamos que el resultado sea de prohibido
+    $response->assertStatus(403);
+}
 }
