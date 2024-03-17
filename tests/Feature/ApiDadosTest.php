@@ -51,7 +51,7 @@ class ApiDadosTest extends TestCase
             'email' => 'test@test.com',
             'password' => 'password'
         ]);
-        //respuesta esperada si el intento es fallido
+        //respuesta esperada si el intento de login es fallido
         $response->assertStatus(401);
         
     }
