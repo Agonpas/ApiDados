@@ -29,8 +29,9 @@ Route::middleware('auth:api')->group(function () {
 // Rutas para jugadores
 Route::middleware(['auth:api', 'role:player'])->group(function () { 
     Route::post('/players/{id}/games', [GameController::class, 'createGame']); //crear juego
-    Route::delete('/players/{id}/games', [GameController::class, 'destroyAllGames']); //eliminamos todos los juegos
     Route::get('/players/{id}/games', [GameController::class, 'getGames']); //mostrar juegos
+    Route::delete('/players/{id}/games', [GameController::class, 'destroyAllGames']); //eliminamos todos los juegos
+    
 });
 // Rutas para administradores
 Route::middleware(['auth:api', 'role:admin'])->group(function () {   
