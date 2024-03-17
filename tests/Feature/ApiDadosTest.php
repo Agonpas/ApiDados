@@ -45,181 +45,361 @@ class ApiDadosTest extends TestCase
         User::where('email', 'test@test.com')->delete();
         
     }
+    public function test_login_with_wrong_credentials(): void
+    {   //probamos que el usuario que acabamos de borrar no puede logearse
+        $response = $this->post('api/login', [
+            'email' => 'test@test.com',
+            'password' => 'password'
+        ]);
+        //respuesta esperada si el intento es fallido
+        $response->assertStatus(401);
+        
+    }
     public function test_update_user_name(): void
-{
-    //creamos un usuario
-    $user = User::factory()->create();
+    {
+        //creamos un usuario
+        $user = User::factory()->create();
 
-    //esto simula la autenticación
-    $this->actingAs($user, 'api');
+        //esto simula la autenticación
+        $this->actingAs($user, 'api');
 
-    //vamos a la ruta put y damos un nuevo nombre y un nuevo nickname
-    $response = $this->putJson("api/players/{$user->id}", [
-        'name' => 'New Name',
-        'nickname' => 'New Nickname'
-    ]);
+        //vamos a la ruta put y damos un nuevo nombre y un nuevo nickname
+        $response = $this->putJson("api/players/{$user->id}", [
+            'name' => 'New Name',
+            'nickname' => 'New Nickname'
+        ]);
 
-    //respuesta esperada si la actualización es correcta
-    $response->assertStatus(200);
-    //eliminamos al usuario al finalizar el test
-    $user->delete();   
-}
-public function test_logout_user(): void
-{
-    //creamos un usuario
-    $user = User::factory()->create();
+        //respuesta esperada si la actualización es correcta
+        $response->assertStatus(200);
+        //eliminamos al usuario al finalizar el test
+        $user->delete();   
+    }
+    public function test_logout_user(): void
+    {
+        //creamos un usuario
+        $user = User::factory()->create();
 
-    //esto simula la autenticación
-    $this->actingAs($user, 'api');
+        //esto simula la autenticación
+        $this->actingAs($user, 'api');
 
-    ////vamos a la ruta post logout y pedimos el cierre de sesión
-    $response = $this->postJson('api/logout');
+        //vamos a la ruta post logout y pedimos el cierre de sesión
+        $response = $this->postJson('api/logout');
 
-    //respuesta esperada si el cierre de sesión es correcto
-    $response->assertStatus(200);
+        //respuesta esperada si el cierre de sesión es correcto
+        $response->assertStatus(200);
 
-    //lo que sigue comprueba que el token se haya eliminado
-    $this->assertNull($user->tokens()->latest()->first());
+        //lo que sigue comprueba que el token se haya eliminado
+        $this->assertNull($user->tokens()->latest()->first());
 
-    //eliminamos al usuario al finalizar el test
-    $user->delete(); 
-}
-public function test_create_game(): void
-{
-    //creamos un usuario
-    $user = User::factory()->create();
+        //eliminamos al usuario al finalizar el test
+        $user->delete(); 
+    }
+    public function test_create_game(): void
+    {
+        //creamos un usuario
+        $user = User::factory()->create();
 
-    //asignamos el rol de jugador al usuario creado
-    $user->assignRole('player'); 
+        //asignamos el rol de jugador al usuario creado
+        $user->assignRole('player'); 
 
-    // Simulamos la autenticación del jugador
-    $this->actingAs($user, 'api');
+        //autenticamos al jugador
+        $this->actingAs($user, 'api');
 
-    // Hacemos la solicitud POST a la ruta de creación de juego
-    $response = $this->postJson("api/players/{$user->id}/games");
+        //usamo la ruta para crear juego al jugador
+        $response = $this->postJson("api/players/{$user->id}/games");
 
-    //respuesta esperada si la creación del juego es correcta
-    $response->assertStatus(201);
-}
-public function test_player_cannot_create_other_players_games(): void
-{
-    // Creamos dos jugadores diferentes
-    $user1 = User::factory()->create();
-    $user2 = User::factory()->create();
+        //respuesta esperada si la creación del juego es correcta
+        $response->assertStatus(201);
+    }
+    public function test_player_cannot_create_other_players_games(): void
+    {
+        //creamos usuarios
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
 
-    // Asignamos el rol de jugador a ambos usuarios
-    $user1->assignRole('player');
-    $user2->assignRole('player');
+        //asignamos roles de jugador
+        $user1->assignRole('player');
+        $user2->assignRole('player');
 
-    // Autenticamos al primer jugador
-    $this->actingAs($user1, 'api');
+        //autenticamos al jugador 1
+        $this->actingAs($user1, 'api');
 
-    // Hacemos la solicitud POST a la ruta de creación de juego para el jugador 2
-    $response = $this->postJson("api/players/{$user2->id}/games");
+        //intentamos crear juego para el jugador 2
+        $response = $this->postJson("api/players/{$user2->id}/games");
 
-    // Verificamos que la solicitud haya sido denegada (esperamos un 403 Forbidden)
-    $response->assertStatus(403);
-}
-public function test_get_games_for_player(): void
-{
-    //creamos jugador
-    $user = User::factory()->create();
-    //asignamos el rol de jugador al usuario creado
-    $user->assignRole('player'); 
+        //verificamos que el resultado sea de prohibido
+        $response->assertStatus(403);
+    }
+    public function test_get_games_for_player(): void
+    {
+        //creamos jugador
+        $user = User::factory()->create();
+        //asignamos el rol de jugador al usuario creado
+        $user->assignRole('player'); 
 
-    //simulación de autenticación
-    $this->actingAs($user, 'api');
+        //simulación de autenticación
+        $this->actingAs($user, 'api');
 
-    //creamos juegos al jugador creado
-    Game::factory()->count(3)->create(['user_id' => $user->id]);
+        //creamos juegos al jugador creado
+        Game::factory()->count(3)->create(['user_id' => $user->id]);
 
-    //comprobamos la ruta get para mostrar los juegos
-    $response = $this->getJson("api/players/{$user->id}/games");
+        //comprobamos la ruta get para mostrar los juegos
+        $response = $this->getJson("api/players/{$user->id}/games");
 
-    //respuesta esperada si la visualización de juegos es correcta
-    $response->assertStatus(200);
+        //respuesta esperada si la visualización de juegos es correcta
+        $response->assertStatus(200);
 
-    //comprobar los campos que devuelve el json son los esperados
-    $response->assertJsonStructure([
-        '*' => [ 
-            'id',
-            'user_id',
-            'dice1',
-            'dice2',
-            'won',
-            'created_at',
-            'updated_at'
-        ]
-    ]);
+        //comprobar los campos que devuelve el json son los esperados
+        $response->assertJsonStructure([
+            '*' => [ 
+                'id',
+                'user_id',
+                'dice1',
+                'dice2',
+                'won',
+                'created_at',
+                'updated_at'
+            ]
+        ]);
 
-    //comprobamos que se han creado los 3 juegos
-    $response->assertJsonCount(3); 
-}
-public function test_player_cannot_view_other_players_games(): void
-{
-    //generamos 2 jugadores
-    $user1 = User::factory()->create();
-    $user2 = User::factory()->create();
+        //comprobamos que se han creado los 3 juegos
+        $response->assertJsonCount(3); 
+    }
+    public function test_player_cannot_view_other_players_games(): void
+    {
+        //generamos 2 jugadores
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
 
-    //asignamos rol jugador
-    $user1->assignRole('player');
-    $user2->assignRole('player');
+        //asignamos rol jugador
+        $user1->assignRole('player');
+        $user2->assignRole('player');
 
-    //autenticamos el jugador1
-    $this->actingAs($user1, 'api');
+        //autenticamos el jugador1
+        $this->actingAs($user1, 'api');
 
-    //creamos juegos al jugador2
-    Game::factory()->count(3)->create(['user_id' => $user2->id]);
+        //creamos juegos al jugador2
+        Game::factory()->count(3)->create(['user_id' => $user2->id]);
 
-    //intento de visualizar los juegos del jugador2
-    $response = $this->getJson("api/players/{$user2->id}/games");
+        //intento de visualizar los juegos del jugador2
+        $response = $this->getJson("api/players/{$user2->id}/games");
 
-    //verificamos que el resultado sea de prohibido
-    $response->assertStatus(403);
-}
-public function test_player_can_delete_games(): void
-{
-    //creamos jugador
-    $user = User::factory()->create();
+        //verificamos que el resultado sea de prohibido
+        $response->assertStatus(403);
+    }
+    public function test_player_can_delete_games(): void
+    {
+        //creamos jugador
+        $user = User::factory()->create();
 
-    //asignamos el rol de jugador al usuario creado
-    $user->assignRole('player'); 
+        //asignamos el rol de jugador al usuario creado
+        $user->assignRole('player'); 
 
-    //simulación de autenticación
-    $this->actingAs($user, 'api');
+        //simulación de autenticación
+        $this->actingAs($user, 'api');
 
-    //creamos juegos al jugador creado
-    Game::factory()->count(3)->create(['user_id' => $user->id]);
-    
-    // Intentamos borrar todos los juegos del jugador
-    $response = $this->deleteJson("api/players/{$user->id}/games");
-    
-    // Verificamos que la solicitud haya sido exitosa (esperamos un 200 OK)
-    $response->assertStatus(200);
-    
-    // Verificamos que los juegos del jugador hayan sido eliminados
-    $this->assertEquals(0, Game::where('user_id', $user->id)->count());
-}
-public function test_player_cannot_delete_other_players_games(): void
-{
-    //generamos 2 jugadores
-    $user1 = User::factory()->create();
-    $user2 = User::factory()->create();
+        //creamos juegos al jugador creado
+        Game::factory()->count(3)->create(['user_id' => $user->id]);
+        
+        //usamos la ruta para borrar todos los juegos del jugador
+        $response = $this->deleteJson("api/players/{$user->id}/games");
+        
+        //respuesta esperada si el borrado de los juegos es correcta
+        $response->assertStatus(200);
+        
+        //comprobamos que se hayan borrado los juegos
+        $this->assertEquals(0, Game::where('user_id', $user->id)->count());
+    }
+    public function test_player_cannot_delete_other_players_games(): void
+    {
+        //generamos 2 jugadores
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
 
-    //asignamos rol jugadores
-    $user1->assignRole('player');
-    $user2->assignRole('player');
+        //asignamos rol jugadores
+        $user1->assignRole('player');
+        $user2->assignRole('player');
 
-    //autenticamos el jugador1
-    $this->actingAs($user1, 'api');
+        //autenticamos el jugador1
+        $this->actingAs($user1, 'api');
 
-    //creamos juegos al jugador2
-    Game::factory()->count(3)->create(['user_id' => $user2->id]);
+        //creamos juegos al jugador2
+        Game::factory()->count(3)->create(['user_id' => $user2->id]);
 
-    //intento de borrar los juegos del jugador2
-    $response = $this->deleteJson("api/players/{$user2->id}/games");
+        //intento de borrar los juegos del jugador2
+        $response = $this->deleteJson("api/players/{$user2->id}/games");
 
-    //verificamos que el resultado sea de prohibido
-    $response->assertStatus(403);
-}
+        //verificamos que el resultado sea de prohibido
+        $response->assertStatus(403);
+    }
+    public function test_admin_can_access_all_users_win_percentage(): void
+    {
+        //creamos administrador
+        $user = User::factory()->create();
+
+        //asignamos el rol de administrador al usuario creado
+        $user->assignRole('admin'); 
+
+        //simulación de autenticación
+        $this->actingAs($user, 'api');
+        
+        //usamos la ruta par acceder a todos los usuarios con sus porcentajes
+        $response = $this->getJson('/api/players');
+        
+        //respuesta esperada si el acceso a los jugadores es correct
+        $response->assertStatus(200);
+        
+        //comprobar los campos que devuelve el json son los esperados
+        $response->assertJsonStructure([
+            'users' => [
+                '*' => [
+                    'user' => [
+                        'id',
+                        'name',
+                        'nickname',
+                        'email',
+                        'email_verified_at',
+                        'created_at',
+                        'updated_at'
+                    ],
+                    'win_percentage'
+                ]
+            ]
+        ]);
+    }
+    public function test_admin_can_access_ranking_users_with_win_percentage(): void
+    {
+        //creamos administrador
+        $user = User::factory()->create();
+
+        //asignamos el rol de administrador al usuario creado
+        $user->assignRole('admin'); 
+
+        //simulación de autenticación
+        $this->actingAs($user, 'api');
+        
+        //usamos la ruta par acceder al ranking de jugadores con sus porcentajes
+        $response = $this->getJson('/api/players/ranking');
+        
+        //respuesta esperada si el acceso a los jugadores es correct
+        $response->assertStatus(200);
+        
+        //comprobar los campos que devuelve el json son los esperados
+        $response->assertJsonStructure([
+            'users' => [
+                '*' => [
+                    'user' => [
+                        'id',
+                        'name',
+                        'nickname',
+                        'email',
+                        'email_verified_at',
+                        'created_at',
+                        'updated_at'
+                    ],
+                    'win_percentage'
+                ]
+            ]
+        ]);
+    }
+    public function test_admin_can_acces_winners(): void
+    {
+        //creamos administrador
+        $user = User::factory()->create();
+
+        //asignamos el rol de adminstrador al usuario creado
+        $user->assignRole('admin'); 
+
+        //simulación de autenticación
+        $this->actingAs($user, 'api');
+        
+        //usamos la ruta par acceder a los ganadores
+        $response = $this->getJson('/api/players/ranking/winner');
+        
+        //respuesta esperada si el acceso a los jugadores es correct
+        $response->assertStatus(200);
+        
+        //comprobar los campos que devuelve el json son los esperados
+        $response->assertJsonStructure([
+            'winners' => [
+                '*' => [
+                    'id',
+                    'name',
+                    'nickname',
+                    'email',
+                    'email_verified_at',
+                    'created_at',
+                    'updated_at'
+                ]
+            ],
+            'win_percentage'
+        ]);
+    }
+    public function test_admin_can_acces_losers(): void
+    {
+        //creamos administrador
+        $user = User::factory()->create();
+
+        //asignamos el rol de adminstrador al usuario creado
+        $user->assignRole('admin'); 
+
+        //simulación de autenticación
+        $this->actingAs($user, 'api');
+        
+        //usamos la ruta par acceder a los perdedores
+        $response = $this->getJson('/api/players/ranking/loser');
+        
+        //respuesta esperada si el acceso a los jugadores es correct
+        $response->assertStatus(200);
+        
+        //comprobar los campos que devuelve el json son los esperados
+        $response->assertJsonStructure([
+            'losers' => [
+                '*' => [
+                    'id',
+                    'name',
+                    'nickname',
+                    'email',
+                    'email_verified_at',
+                    'created_at',
+                    'updated_at'
+                ]
+            ],
+            'win_percentage'
+        ]);
+    }
+    public function test_player_cannot_access_admin_functions(): void
+    {
+        //creamos jugador
+        $user = User::factory()->create();
+
+        //asignamos el rol de jugador al usuario creado
+        $user->assignRole('player'); 
+
+        //simulación de autenticación
+        $this->actingAs($user, 'api');
+
+        //intento de acceder a función de administrador
+        $response = $this->getJson('/api/players'); 
+
+        //verificamos que el resultado sea de prohibido
+        $response->assertStatus(403);
+    }
+    public function test_admin_cannot_access_player_functions(): void
+    {
+        //creamos administrador
+        $user = User::factory()->create();
+
+        //asignamos el rol de administrador al usuario creado
+        $user->assignRole('admin'); 
+
+        //simulación de autenticación
+        $this->actingAs($user, 'api');
+
+        //intento de acceder a función de player
+        $response = $this->postJson("api/players/{$user->id}/games");
+
+        //verificamos que el resultado sea de prohibido
+        $response->assertStatus(403);
+    }
 }
