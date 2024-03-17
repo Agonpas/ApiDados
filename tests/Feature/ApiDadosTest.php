@@ -83,5 +83,23 @@ public function test_logout_user(): void
     //eliminamos al usuario al finalizar el test
     $user->delete(); 
 }
+public function test_create_game(): void
+{
+    //creamos un usuario
+    $user = User::factory()->create();
 
+    //asignamos el rol de jugador al usuario creado
+    $user->assignRole('player'); 
+
+    // Simulamos la autenticación del jugador
+    $this->actingAs($user, 'api');
+
+    // Hacemos la solicitud POST a la ruta de creación de juego
+    $response = $this->postJson("api/players/{$user->id}/games");
+
+    //respuesta esperada si la creación del juego es correcta
+    $response->assertStatus(201);
+    //eliminamos al usuario al finalizar el test
+    $user->delete(); 
+}
 }
