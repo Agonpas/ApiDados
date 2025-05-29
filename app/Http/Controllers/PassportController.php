@@ -45,22 +45,31 @@ class PassportController extends Controller
     
         if ($validator->fails()) {
            
-           return response()->json(['Error de validación', $validator->errors()], 401);
+           return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
         }
+
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
 
         $user = User::create($input);
         $user->assignRole('player');
 
-        $success['token'] = $user->createToken('API Token')->accessToken;
+        /*$success['token'] = $user->createToken('API Token')->accessToken;
         $success['id'] = $user->id;
         $success['name'] = $user->name;
-        $success['role'] = 'player';
+        $success['role'] = 'player';*/
         
-    
        
-        return response()->json([$success, 'Usuario registrado con éxito.'], 201);
+        return response()->json([
+            'token' => $user->createToken('API Token')->accessToken,
+            'id' => $user->id,
+            'name' => $user->name,
+            'role' => 'player',
+            'message' => 'Usuario registrado con éxito.'
+        ], 201);
     }
    
     public function logout()
