@@ -25,9 +25,13 @@ class PassportController extends Controller
             $success['name'] = $user->name;
             $success['email'] = $user->email;
             
-            return response()->json([$success, 'Usuario logeado con éxito.'], 200);
+            return response()->json([$success, 
+                'message' => 'Usuario logeado con éxito.'
+            ], 200);
         } else {
-            return response()->json(['error' => 'Error de inicio de sesión. Error en mail o contraseña.'], 401);
+            return response()->json([
+                'message' => 'Error de inicio de sesión. Error en mail o contraseña.'
+            ], 401);
 
         }
         
