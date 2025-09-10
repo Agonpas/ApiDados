@@ -34,15 +34,23 @@ class UserController extends Controller
      * Show the form for creating a new resource.
      */
     public function create(Request $request, $nickname)
-    {
-        $user = User::create([
-            'name' => $request->name,
-            'nickname' => $nickname,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-        return $user;
-    }
+{
+    $user = User::create([
+        'name' => $request->name,
+        'nickname' => $nickname,
+        'email' => $request->email,
+        'password' => Hash::make($request->password),
+    ]);
+
+    // Generar token
+    $token = auth()->login($user);
+
+    return response()->json([
+        'access_token' => $token,
+        'user' => $user,
+        'message' => 'Usuario registrado y logueado con éxito.'
+    ], 201);
+}
 
     /**
      * Store a newly created resource in storage.
@@ -62,6 +70,14 @@ class UserController extends Controller
             return new UserResource($user->loadMissing('games'));
         }
         return new UserResource($user);
+    }
+
+    public function me(Request $request)
+    {
+        $user = $request->user();
+        $user->role = $user->getRoleNames()->first();
+
+        return response()->json($user);
     }
 
     /**

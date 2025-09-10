@@ -24,6 +24,8 @@ Route::post('/login', [PassportController::class,'login']); //iniciar sesión
 Route::middleware('auth:api')->group(function () {
     Route::put('/players/{id}', [UserController::class, 'updateName']); //modificar usuario
     Route::post('/logout', [PassportController::class, 'logout']); //cerrar sesión 
+    Route::get('/me', [UserController::class, 'me']); //mostrar perfil
+    
 });
 
 // Rutas para jugadores

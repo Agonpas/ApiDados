@@ -25,7 +25,9 @@ class PassportController extends Controller
             $success['name'] = $user->name;
             $success['email'] = $user->email;
             
-            return response()->json([$success, 
+            return response()->json([
+                'access_token' => $success['token'],
+                'user' => $user,
                 'message' => 'Usuario logeado con éxito.'
             ], 200);
         } else {
@@ -61,19 +63,19 @@ class PassportController extends Controller
         $user = User::create($input);
         $user->assignRole('player');
 
+        $token = $user->createToken('API Token')->accessToken;
+
         /*$success['token'] = $user->createToken('API Token')->accessToken;
         $success['id'] = $user->id;
         $success['name'] = $user->name;
         $success['role'] = 'player';*/
         
        
-        return response()->json([
-            'token' => $user->createToken('API Token')->accessToken,
-            'id' => $user->id,
-            'name' => $user->name,
-            'role' => 'player',
-            'message' => 'Usuario registrado con éxito.'
-        ], 201);
+         return response()->json([
+        'access_token' => $token,
+        'user' => $user,
+        'message' => 'Usuario registrado y logueado con éxito.'
+    ], 201);
     }
    
     public function logout()
