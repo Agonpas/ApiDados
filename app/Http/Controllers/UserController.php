@@ -11,6 +11,7 @@ use App\Filters\UserFilter;
 use App\Http\Requests\UpdateUserRequest;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -103,9 +104,14 @@ class UserController extends Controller
         }
 
         $this->validate($request, [
-            'name' => 'required',
-            'nickname' => 'required'
-        ]);
+            'name' => 'required|string|max:255',
+            'nickname' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('users', 'nickname')->ignore($user->id),
+    ],
+]);
         $user->name = $request->input('name');
         $user->nickname = $request->input('nickname');
         $user->save();
