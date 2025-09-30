@@ -24,10 +24,12 @@ class PassportController extends Controller
             $success['id'] = $user->id;
             $success['name'] = $user->name;
             $success['email'] = $user->email;
+            //$success['role'] = $roles->name;
             
             return response()->json([
                 'access_token' => $success['token'],
                 'user' => $user,
+                'role' => $user->getRoleNames()->first(), // "admin" o "player"
                 'message' => 'Usuario logeado con éxito.'
             ], 200);
         } else {
@@ -65,16 +67,17 @@ class PassportController extends Controller
 
         $token = $user->createToken('API Token')->accessToken;
 
-        /*$success['token'] = $user->createToken('API Token')->accessToken;
+        $success['token'] = $user->createToken('API Token')->accessToken;
         $success['id'] = $user->id;
         $success['name'] = $user->name;
-        $success['role'] = 'player';*/
+        $success['role'] = 'player';
         
        
          return response()->json([
         'access_token' => $token,
         'user' => $user,
-        'message' => 'Usuario registrado y logueado con éxito.'
+        'role' => $user->getRoleNames()->first(), // "admin" o "player"
+        'message' => 'Usuario registrado y logueado con mucho éxito.'
     ], 201);
     }
    
